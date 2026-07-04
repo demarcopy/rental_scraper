@@ -10,3 +10,4 @@ data/processed/analysis/plots/
 .DS_Store
 Thumbs.db
 data/processed/analysis/matplotlib_config/
+.tmp/

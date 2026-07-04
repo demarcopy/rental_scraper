@@ -16,17 +16,13 @@ Este archivo se genera corriendo:
 python src/main.py
 ```
 
-El analisis reproducible se puede ejecutar con:
+El analisis reproducible se trabaja desde el notebook:
 
 ```bash
-python src/analyze.py
+jupyter notebook notebooks/analisis_alquileres.ipynb
 ```
 
-Ese comando genera salidas en:
-
-```text
-data/processed/analysis/
-```
+El outcome del analisis debe quedar en el notebook. Las tablas y graficos se muestran en celdas, sin generar CSVs ni imagenes como resultado final del analisis.
 
 ## Objetivo del analisis
 

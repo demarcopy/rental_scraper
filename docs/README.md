@@ -48,23 +48,13 @@ Desde la raiz del proyecto, primero se corre el scraping:
 python src/main.py
 ```
 
-Luego se corre el analisis:
+Luego se abre el notebook de analisis:
 
 ```bash
-python src/analyze.py
+jupyter notebook notebooks/analisis_alquileres.ipynb
 ```
 
-El analisis genera salidas en:
-
-```text
-data/processed/analysis/
-```
-
-Tambien hay un notebook listo para abrir en Jupyter:
-
-```text
-notebooks/analisis_alquileres.ipynb
-```
+El outcome del analisis vive unicamente en ese notebook: tablas, calculos y graficos se muestran ahi mismo. No se considera salida final ningun CSV ni imagen generado aparte.
 
 ## Documentacion disponible
 
