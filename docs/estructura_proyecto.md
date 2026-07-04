@@ -1,86 +1,79 @@
 # Estructura del proyecto
 
-Para que el proyecto sea fácil de entender y mantener, conviene organizarlo por carpetas.
+El repositorio separa codigo, datos, notebooks y documentacion para que el flujo sea facil de ejecutar y revisar.
 
-## Estructura sugerida
+## Estructura
 
 ```text
-scraper-infocasas/
-├── docs/
-├── notebooks/
-├── src/
-├── data/
-│   ├── raw/
-│   └── processed/
-└── README.md
+Scrapper-alquileres/
+|-- docs/
+|-- notebooks/
+|-- src/
+|-- data/
+|   |-- raw/
+|   `-- processed/
+|-- requirements.txt
+|-- README.md
+`-- .gitignore
 ```
 
-## Qué va en cada carpeta
+## `src/`
 
-### `src/`
+Contiene el codigo del scraper.
 
-Aquí iría el código principal del proyecto.
+Archivos principales:
 
-Por ejemplo:
+- `config.py`: URL inicial y configuracion base.
+- `fetcher.py`: descarga HTML con `requests`.
+- `parser.py`: extrae links y campos desde HTML/JSON.
+- `main.py`: orquesta el scraping y exporta CSVs.
+- `analyze.py`: script auxiliar de analisis. El outcome principal del proyecto se mantiene en el notebook.
 
-- Funciones para descargar HTML.
-- Funciones para parsear páginas.
-- Funciones para limpiar datos.
-- Funciones para exportar resultados.
+## `data/raw/`
 
-La idea es que el código reusable viva aquí y no quede mezclado con pruebas sueltas.
+Guarda HTML crudo descargado desde el sitio objetivo.
 
-### `data/raw/`
+Estos archivos sirven para depurar parsing y evitar requests repetidas durante el desarrollo.
 
-Aquí se guardan los datos sin limpiar.
+## `data/processed/`
 
-Por ejemplo:
+Guarda salidas tecnicas del scraping.
 
-- HTML descargado.
-- Listados originales.
-- Archivos intermedios.
+Archivos principales:
 
-Sirve como respaldo y como punto de partida para volver a procesar datos.
+- `infocasas_1_dormitorio_links.csv`: links detectados.
+- `infocasas_1_dormitorio_detalle.csv`: dataset consolidado de publicaciones.
 
-### `data/processed/`
+## `notebooks/`
 
-Aquí se guardan los datos ya limpios y listos para análisis.
+Contiene el notebook principal de analisis:
 
-Por ejemplo:
+```text
+notebooks/analisis_alquileres.ipynb
+```
 
-- CSV final.
-- Tablas normalizadas.
-- Archivos con columnas ordenadas y valores convertidos.
+Este notebook es el outcome del proyecto. Ahi se presentan tablas, transformaciones, metricas y graficos.
 
-### `notebooks/`
+## `docs/`
 
-Aquí van los notebooks de experimentación.
+Contiene documentacion tecnica del proyecto:
 
-Se usan para:
+- funcionamiento del scraper,
+- flujo de scraping,
+- campos extraidos,
+- analisis en notebook,
+- estructura del repositorio.
 
-- Probar ideas.
-- Explorar el HTML.
-- Revisar resultados.
-- Documentar pasos de forma interactiva.
+## Archivos ignorados
 
-El notebook de referencia del proyecto puede vivir aquí si después se decide ordenar el repositorio.
+El repositorio ignora archivos generados o locales:
 
-### `docs/`
+- `.venv/`,
+- `.tmp/`,
+- `__pycache__/`,
+- checkpoints de Jupyter,
+- HTML crudo,
+- cache local de Matplotlib,
+- graficos generados opcionalmente.
 
-Aquí va la documentación del proyecto.
-
-Sirve para dejar claro:
-
-- Qué hace el proyecto.
-- Cómo funciona el flujo.
-- Qué campos se van a extraer.
-- Cuáles son los próximos pasos.
-
-## Beneficio de esta estructura
-
-Separar código, datos y documentación ayuda a:
-
-- Entender mejor el proyecto.
-- Evitar desorden.
-- Reutilizar el trabajo.
-- Hacer más fácil el mantenimiento.
+Esto mantiene el repositorio enfocado en codigo, documentacion y resultados relevantes.

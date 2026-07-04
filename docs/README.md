@@ -1,78 +1,91 @@
-﻿# Proyecto educativo de web scraping
+# Documentacion del proyecto
 
-Este proyecto tiene como objetivo aprender web scraping en Python usando publicaciones de alquiler como caso practico.
+Este directorio describe el funcionamiento del scraper de alquileres, la estructura de los datos generados y el flujo de analisis incluido en el notebook.
 
-La idea no es solo hacer que el scraper funcione, sino entender el flujo completo: obtener datos desde la web, estructurarlos, guardarlos y analizarlos con `pandas`.
+El proyecto esta orientado a extraer publicaciones de alquiler desde InfoCasas, consolidar los datos principales en CSV y analizarlos de forma reproducible en Jupyter Notebook.
 
-## Estado actual
+## Outcome principal
 
-El scraper ya completa el flujo base:
-
-1. Descarga el HTML del listado de InfoCasas.
-2. Extrae los links de las publicaciones.
-3. Entra a cada publicacion.
-4. Lee datos estructurados desde `__NEXT_DATA__`.
-5. Exporta un CSV con datos de detalle.
-
-La salida principal para analisis es:
+El resultado principal del proyecto es el notebook:
 
 ```text
-data/processed/infocasas_1_dormitorio_detalle.csv
+notebooks/analisis_alquileres.ipynb
 ```
 
-## Dataset actual
+Ese notebook concentra el analisis final:
 
-El CSV de detalle contiene una fila por publicacion y columnas como:
+- carga el CSV generado por el scraper,
+- limpia y normaliza los campos principales,
+- revisa calidad de datos,
+- compara alquileres por tipo de propiedad,
+- compara precios por barrio,
+- calcula costo mensual total,
+- calcula precio por metro cuadrado cuando hay superficie valida,
+- muestra tablas y graficos dentro del propio notebook.
 
-- `url`
-- `titulo`
-- `precio`
-- `moneda`
-- `monto`
-- `barrio`
-- `dormitorios`
-- `banios`
-- `metros_cuadrados`
-- `gastos_comunes`
-- `tipo_propiedad`
-- `referencia`
-- `descripcion`
+El CSV del scraper es un insumo tecnico. El outcome analitico se presenta en el notebook.
 
-El analisis no debe limitarse solo a apartamentos. El campo `tipo_propiedad` permite separar y comparar apartamentos, casas u otros tipos de inmueble cuando aparezcan en la muestra.
+## Exportacion opcional
 
-## Como correrlo
+El notebook puede extenderse para exportar resultados intermedios a CSV si se necesita compartir tablas o reutilizarlas en otra herramienta.
 
-Desde la raiz del proyecto, primero se corre el scraping:
+La exportacion es opcional y no reemplaza al notebook como entrega principal del analisis.
+
+Ejemplo:
+
+```python
+precio_barrio.to_csv("data/processed/analysis/precio_por_barrio.csv", index=False)
+```
+
+## Flujo general
+
+1. Ejecutar el scraper.
+2. Generar el CSV consolidado de publicaciones.
+3. Abrir el notebook de analisis.
+4. Ejecutar las celdas del notebook.
+5. Revisar tablas, graficos y conclusiones dentro del notebook.
+6. Exportar CSVs solo si hace falta una salida adicional.
+
+## Comandos principales
+
+Ejecutar scraping:
 
 ```bash
 python src/main.py
 ```
 
-Luego se abre el notebook de analisis:
+Abrir el notebook:
 
 ```bash
 jupyter notebook notebooks/analisis_alquileres.ipynb
 ```
 
-El outcome del analisis vive unicamente en ese notebook: tablas, calculos y graficos se muestran ahi mismo. No se considera salida final ningun CSV ni imagen generado aparte.
+## Dataset generado por scraping
 
-## Documentacion disponible
+El scraper genera el archivo:
 
-- [Guia de estudio: como funciona este scraper](./guia_estudio_scraping.md)
+```text
+data/processed/infocasas_1_dormitorio_detalle.csv
+```
+
+Cada fila representa una publicacion de alquiler y contiene campos como `url`, `titulo`, `precio`, `moneda`, `monto`, `barrio`, `dormitorios`, `banios`, `metros_cuadrados`, `gastos_comunes`, `tipo_propiedad`, `referencia` y `descripcion`.
+
+## Documentos
+
+- [Funcionamiento del scraper](./funcionamiento_scraper.md)
 - [Flujo de scraping](./flujo_scraping.md)
 - [Campos extraidos](./campos_a_extraer.md)
 - [Analisis de alquileres](./analisis_alquileres.md)
+- [Estructura del proyecto](./estructura_proyecto.md)
 
 ## Scraping responsable
 
-Este proyecto debe hacerse con cuidado y criterio.
+El scraper debe ejecutarse con criterio para evitar sobrecargar el sitio objetivo.
 
-- No hacer demasiadas requests en poco tiempo.
-- Usar pausas entre solicitudes cuando sea necesario.
-- Respetar los terminos de uso del sitio.
-- No intentar recolectar datos personales.
-- No sobrecargar el servidor con consultas repetidas.
+Buenas practicas aplicadas o recomendadas:
 
-La idea es aprender el proceso tecnico, no afectar el funcionamiento normal del sitio.
-
-
+- reutilizar HTML local cuando sea posible,
+- evitar requests innecesarias,
+- mantener pausas si se amplia el volumen de paginas,
+- no recolectar datos personales,
+- respetar los terminos de uso del sitio objetivo.

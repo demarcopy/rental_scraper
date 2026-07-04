@@ -102,7 +102,7 @@ Tambien se puede abrir Jupyter y seleccionar manualmente:
 notebooks/analisis_alquileres.ipynb
 ```
 
-El notebook carga el CSV generado por el scraping, limpia los datos en memoria y muestra las tablas/graficos dentro del propio notebook. No se usan archivos CSV ni imagenes derivados como outcome del analisis.
+El notebook carga el CSV generado por el scraping, limpia los datos en memoria y muestra las tablas/graficos dentro del propio notebook. El outcome principal del analisis es el notebook; si hace falta compartir tablas puntuales, se pueden exportar CSVs desde una celda opcional.
 
 ## Salidas generadas
 

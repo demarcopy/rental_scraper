@@ -1,28 +1,26 @@
-﻿# Campos extraidos
+# Campos extraidos
 
-Estos son los campos que actualmente se extraen de cada publicacion de alquiler y se guardan en:
+El scraper consolida los campos principales de cada publicacion en:
 
 ```text
 data/processed/infocasas_1_dormitorio_detalle.csv
 ```
 
-## Lista de campos
+Este CSV es el input del notebook de analisis.
+
+## Campos del dataset
 
 ### `url`
 
-Link completo de la publicacion.
-
-Sirve para identificar cada anuncio y volver a abrirlo mas adelante.
+Link completo de la publicacion. Sirve para identificar el aviso y volver a consultarlo.
 
 ### `titulo`
 
-Nombre o titulo de la propiedad.
-
-Suele resumir el tipo de inmueble, la zona y alguna caracteristica comercial del aviso.
+Titulo comercial de la publicacion. Resume tipo de inmueble, zona y atributos destacados.
 
 ### `precio`
 
-Valor mostrado en la publicacion con moneda incluida.
+Precio tal como aparece publicado, incluyendo moneda.
 
 Ejemplos:
 
@@ -31,95 +29,86 @@ Ejemplos:
 
 ### `moneda`
 
-Moneda del precio.
+Moneda detectada en el precio.
 
 Ejemplos:
 
 - `$`
 - `U$S`
 
-Este campo es importante porque no conviene comparar montos en monedas distintas sin convertirlos antes.
+Este campo es critico porque no se deben comparar montos de monedas distintas sin conversion previa.
 
 ### `monto`
 
-Numero del precio sin el simbolo de moneda.
-
-Este campo sirve para calculos numericos, como promedio, mediana, minimo y maximo.
+Valor numerico del precio sin simbolo de moneda. Permite calcular media, mediana, minimo, maximo y otras metricas.
 
 ### `barrio`
 
-Zona o barrio donde esta ubicada la propiedad.
-
-Es uno de los campos mas importantes para comparar valores.
+Barrio o zona de la publicacion. Es uno de los campos principales para comparar precios.
 
 ### `dormitorios`
 
-Cantidad de dormitorios.
+Cantidad de dormitorios informada en la ficha.
 
 ### `banios`
 
-Cantidad de banios.
+Cantidad de banios informada en la ficha.
 
 ### `metros_cuadrados`
 
-Superficie principal extraida desde el detalle de la publicacion.
-
-Puede necesitar revision porque algunas publicaciones informan varias superficies, por ejemplo edificados, terraza o terreno.
+Superficie principal extraida desde la publicacion. Puede requerir validacion porque algunos avisos informan varias superficies o valores incompletos.
 
 ### `gastos_comunes`
 
-Costo mensual de gastos comunes, si la publicacion lo informa.
-
-No siempre aparece. Para analizarlo conviene crear una version numerica, por ejemplo `gastos_comunes_monto`.
+Texto original de gastos comunes, si esta disponible. En el notebook se convierte a una version numerica llamada `gastos_comunes_monto`.
 
 ### `tipo_propiedad`
 
-Tipo de inmueble.
+Tipo de inmueble publicado.
 
 Ejemplos:
 
 - Apartamento.
 - Casa.
-- Local.
 - Oficina.
+- Local.
 
-Este campo permite analizar todos los alquileres y no limitarse a apartamentos.
+Este campo permite analizar todos los alquileres disponibles y segmentar cuando hay suficiente muestra.
 
 ### `referencia`
 
-Identificador interno o referencia del aviso.
-
-Es util para eliminar duplicados cuando se amplie el scraping.
+Identificador interno del aviso. Es util para detectar duplicados si se amplia el scraping.
 
 ### `descripcion`
 
-Texto descriptivo de la publicacion.
+Texto descriptivo de la publicacion. Puede usarse para inspeccion manual, busqueda de palabras clave o features futuras.
 
-Puede servir para analisis exploratorio posterior, busqueda de palabras clave o deteccion de caracteristicas no estructuradas.
+## Campos derivados en el notebook
 
-## Campos que pueden venir vacios
+El notebook genera campos analiticos en memoria:
 
-Es normal que algunos campos falten en varias publicaciones.
+### `gastos_comunes_monto`
 
-En especial pueden venir vacios:
+Version numerica de `gastos_comunes`.
 
-- `gastos_comunes`
-- `metros_cuadrados`
-- `descripcion`
+### `costo_mensual_total`
 
-Por eso conviene tratar los datos faltantes desde el principio y no asumir que todas las publicaciones tienen la misma estructura.
+Suma de `monto` y `gastos_comunes_monto`.
 
-## Campos clave para analisis
+### `precio_m2`
 
-Para el analisis de alquileres, los campos mas importantes son:
+Relacion entre `monto` y `metros_cuadrados`, calculada solo cuando la superficie es valida.
 
-- `tipo_propiedad`
-- `barrio`
-- `moneda`
-- `monto`
-- `gastos_comunes`
-- `dormitorios`
-- `banios`
-- `metros_cuadrados`
+## Consideraciones de calidad
 
-El primer paso analitico no deberia filtrar por apartamentos, sino revisar la distribucion de `tipo_propiedad` y decidir si se analiza todo junto o por segmentos.
+Algunos campos pueden venir vacios o incompletos segun la publicacion.
+
+Casos a revisar:
+
+- gastos comunes no informados,
+- metros cuadrados iguales a cero,
+- monedas mezcladas,
+- barrios con pocas publicaciones,
+- tipos de propiedad con baja cantidad de casos.
+
+Estas validaciones se realizan dentro del notebook.
