@@ -9,3 +9,4 @@ data/processed/analysis/plots/
 .env
 .DS_Store
 Thumbs.db
+data/processed/analysis/matplotlib_config/

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import pandas as pd
 ROOT_DIR = Path(__file__).resolve().parents[1]
 INPUT_PATH = ROOT_DIR / "data" / "processed" / "infocasas_1_dormitorio_detalle.csv"
 OUTPUT_DIR = ROOT_DIR / "data" / "processed" / "analysis"
+MPLCONFIG_DIR = OUTPUT_DIR / "matplotlib_config"
 
 
 def limpiar_monto_gastos(valor: object) -> float:
@@ -103,6 +105,9 @@ def guardar_salidas(df: pd.DataFrame, resumenes: dict[str, pd.DataFrame]) -> Non
 
 def generar_graficos(df: pd.DataFrame) -> None:
     """Genera graficos simples si matplotlib esta instalado."""
+    MPLCONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("MPLCONFIGDIR", str(MPLCONFIG_DIR))
+
     try:
         import matplotlib.pyplot as plt
     except ImportError:
