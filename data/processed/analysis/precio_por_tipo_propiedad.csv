@@ -1,0 +1,4 @@
+moneda,tipo_propiedad,count,mean,median,min,max
+$,Apartamento,15,31859.333333333332,30500.0,21000,40500
+$,Casa,1,29000.0,29000.0,29000,29000
+U$S,Apartamento,5,1948.0,1350.0,890,5000
