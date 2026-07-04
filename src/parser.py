@@ -60,6 +60,31 @@ def extraer_links_publicaciones(html: str, base_url: str = BASE_URL) -> list[str
     return enlaces
 
 
+def extraer_links_paginas(html: str, base_url: str = BASE_URL) -> list[str]:
+    """Extrae links absolutos de todas las paginas disponibles en el listado.
+
+    InfoCasas expone la paginacion como rutas del tipo ``/pagina2``.
+    El paginador puede mostrar solo una ventana parcial y el ultimo numero;
+    por eso inferimos el rango completo hasta la mayor pagina detectada.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    numeros_paginas: set[int] = set()
+
+    for anchor in soup.find_all("a", href=True):
+        href = anchor.get("href", "").strip()
+        numero_pagina = _extraer_numero_pagina(href)
+        if numero_pagina is None:
+            continue
+        numeros_paginas.add(numero_pagina)
+
+    if not numeros_paginas:
+        return []
+
+    ultima_pagina = max(numeros_paginas)
+    base_listado = base_url.rstrip("/")
+    return [f"{base_listado}/pagina{numero}" for numero in range(2, ultima_pagina + 1)]
+
+
 def extraer_datos_publicacion(html: str, url: str) -> dict[str, Any]:
     """Extrae campos básicos desde el detalle de una publicación.
 
@@ -298,6 +323,13 @@ def _to_int(valor: Any) -> int | None:
 def formatear_numero(valor: int) -> str:
     """Formatea números con separador de miles para monedas locales."""
     return f"{valor:,}".replace(",", ".")
+
+
+def _extraer_numero_pagina(href: str) -> int | None:
+    match = re.search(r"/pagina(\d+)(?:$|[/?#])", href)
+    if not match:
+        return None
+    return int(match.group(1))
 
 
 def _es_link_de_publicacion(href: str) -> bool:

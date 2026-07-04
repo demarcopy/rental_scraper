@@ -40,11 +40,12 @@ precio_barrio.to_csv("data/processed/analysis/precio_por_barrio.csv", index=Fals
 ## Flujo general
 
 1. Ejecutar el scraper.
-2. Generar el CSV consolidado de publicaciones.
-3. Abrir el notebook de analisis.
-4. Ejecutar las celdas del notebook.
-5. Revisar tablas, graficos y conclusiones dentro del notebook.
-6. Exportar CSVs solo si hace falta una salida adicional.
+2. Detectar y recorrer todas las paginas disponibles del listado.
+3. Generar el CSV consolidado de publicaciones.
+4. Abrir el notebook de analisis.
+5. Ejecutar las celdas del notebook.
+6. Revisar tablas, graficos y conclusiones dentro del notebook.
+7. Exportar CSVs solo si hace falta una salida adicional.
 
 ## Comandos principales
 

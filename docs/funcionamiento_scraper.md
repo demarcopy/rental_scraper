@@ -10,7 +10,7 @@ El scraper automatiza el relevamiento de publicaciones de alquiler desde InfoCas
 
 ### `requests`
 
-Se usa para realizar requests HTTP y descargar el HTML de listados y publicaciones individuales.
+Se usa para realizar requests HTTP y descargar en memoria el HTML de listados y publicaciones individuales.
 
 ### `BeautifulSoup`
 
@@ -32,16 +32,20 @@ Se usa para manejar rutas de archivos de forma consistente entre sistemas operat
 
 1. `src/config.py` define la URL inicial del listado.
 2. `src/fetcher.py` descarga HTML usando `requests`.
-3. `src/parser.py` extrae links de publicaciones desde el listado.
-4. `src/main.py` coordina el flujo completo.
-5. El scraper visita cada publicacion encontrada.
-6. El parser lee el JSON embebido en `__NEXT_DATA__`.
-7. Se extraen campos desde `pageProps.data` y `technicalSheet`.
-8. Se guarda un CSV consolidado en `data/processed/`.
+3. `src/parser.py` detecta la paginacion disponible desde el primer listado.
+4. `src/main.py` recorre todas las paginas de listado detectadas.
+5. `src/parser.py` extrae y deduplica links de publicaciones.
+6. El scraper visita cada publicacion encontrada.
+7. El parser lee el JSON embebido en `__NEXT_DATA__`.
+8. Se extraen campos desde `pageProps.data` y `technicalSheet`.
+9. Se guarda un CSV consolidado en `data/processed/`.
+10. Las paginas o publicaciones fallidas se registran en un CSV de errores para revision posterior.
 
-## Extraccion de links
+## Extraccion de paginas y links
 
-El listado contiene muchos enlaces. Para quedarse con publicaciones individuales, el parser filtra URLs que tienen estructura de ficha y terminan en un identificador numerico.
+El primer listado contiene links de paginacion. El scraper detecta la ultima pagina disponible desde rutas como `/pagina50` y construye el rango completo de paginas a procesar.
+
+Cada listado contiene muchos enlaces. Para quedarse con publicaciones individuales, el parser filtra URLs que tienen estructura de ficha y terminan en un identificador numerico.
 
 Ejemplo conceptual:
 

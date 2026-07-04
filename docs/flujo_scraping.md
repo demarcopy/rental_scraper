@@ -22,19 +22,26 @@ Funcion principal:
 obtener_html(url)
 ```
 
-El HTML crudo del listado se guarda en:
+Por defecto, el HTML se procesa en memoria y no se guarda en disco. Esto evita llenar `data/raw/` con muchas paginas de listado.
 
-```text
-data/raw/infocasas_1_dormitorio.html
+Para depurar parsing se puede activar cache raw de forma opcional:
+
+```powershell
+$env:CACHE_RAW_HTML = "1"
+python src/main.py
 ```
 
-Guardar HTML local permite depurar el parser y repetir pruebas sin descargar la pagina cada vez.
+## 3. Deteccion de paginacion
 
-## 3. Extraccion de links
+El primer listado incluye links de paginacion con rutas del tipo `/pagina2`. El scraper identifica la mayor pagina visible en el paginador e infiere el rango completo de paginas a recorrer.
 
-`src/parser.py` revisa las etiquetas `<a>` del listado y filtra enlaces que corresponden a publicaciones individuales.
+Por ejemplo, si detecta `pagina50`, procesa desde la pagina 1 hasta la pagina 50.
 
-La lista de links se guarda en:
+## 4. Extraccion de links
+
+`src/parser.py` revisa las etiquetas `<a>` de cada pagina de listado y filtra enlaces que corresponden a publicaciones individuales.
+
+La lista consolidada de links se deduplica y se guarda en:
 
 ```text
 data/processed/infocasas_1_dormitorio_links.csv
@@ -42,13 +49,19 @@ data/processed/infocasas_1_dormitorio_links.csv
 
 Este archivo es una salida intermedia util para inspeccionar que publicaciones fueron detectadas.
 
-## 4. Visita a cada publicacion
+Si una pagina de listado falla luego de varios reintentos, se registra en `data/processed/infocasas_1_dormitorio_errores.csv` y el scraper continua con la siguiente pagina.
+
+## 5. Visita a cada publicacion
 
 `src/main.py` recorre los links detectados y descarga el HTML de cada ficha individual.
 
+El scraper espera entre requests usando `REQUEST_DELAY_SECONDS` para evitar descargas consecutivas demasiado agresivas.
+
 Cada detalle contiene mas informacion que el listado, por eso el dataset final se construye desde las paginas individuales.
 
-## 5. Lectura de `__NEXT_DATA__`
+Si una publicacion individual falla luego de varios reintentos, se registra en el CSV de errores y el proceso continua con el resto.
+
+## 6. Lectura de `__NEXT_DATA__`
 
 InfoCasas incluye datos estructurados dentro de un JSON embebido en el HTML:
 
@@ -60,7 +73,7 @@ El scraper parsea ese JSON y toma informacion desde estructuras como `pageProps.
 
 Esta estrategia es mas estable que depender solo de clases CSS visuales.
 
-## 6. Normalizacion de campos
+## 7. Normalizacion de campos
 
 Durante la extraccion se consolidan campos utiles para analisis:
 
@@ -73,7 +86,7 @@ Durante la extraccion se consolidan campos utiles para analisis:
 - gastos comunes,
 - descripcion.
 
-## 7. CSV consolidado
+## 8. CSV consolidado
 
 La salida final del scraping se guarda en:
 
@@ -83,7 +96,7 @@ data/processed/infocasas_1_dormitorio_detalle.csv
 
 Este archivo es el input del notebook.
 
-## 8. Analisis en notebook
+## 9. Analisis en notebook
 
 El analisis se realiza en:
 
@@ -93,7 +106,7 @@ notebooks/analisis_alquileres.ipynb
 
 El notebook es el outcome principal: ahi se muestran tablas, metricas y graficos.
 
-## 9. Exportacion opcional
+## 10. Exportacion opcional
 
 Si se necesita compartir una tabla puntual, el notebook puede exportarla a CSV con `to_csv`.
 

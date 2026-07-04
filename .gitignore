@@ -11,3 +11,5 @@ data/processed/analysis/plots/
 Thumbs.db
 data/processed/analysis/matplotlib_config/
 .tmp/
+data/raw/listados/
+data/raw/**/*.html

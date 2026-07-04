@@ -27,13 +27,12 @@ Archivos principales:
 - `fetcher.py`: descarga HTML con `requests`.
 - `parser.py`: extrae links y campos desde HTML/JSON.
 - `main.py`: orquesta el scraping y exporta CSVs.
-- `analyze.py`: script auxiliar de analisis. El outcome principal del proyecto se mantiene en el notebook.
 
 ## `data/raw/`
 
-Guarda HTML crudo descargado desde el sitio objetivo.
+Carpeta opcional para HTML crudo. Por defecto el scraper procesa HTML en memoria y no escribe archivos raw.
 
-Estos archivos sirven para depurar parsing y evitar requests repetidas durante el desarrollo.
+Solo se usa cuando se ejecuta con `CACHE_RAW_HTML=1`, principalmente para depurar parsing.
 
 ## `data/processed/`
 
@@ -41,8 +40,9 @@ Guarda salidas tecnicas del scraping.
 
 Archivos principales:
 
-- `infocasas_1_dormitorio_links.csv`: links detectados.
+- `infocasas_1_dormitorio_links.csv`: links detectados en todas las paginas del listado.
 - `infocasas_1_dormitorio_detalle.csv`: dataset consolidado de publicaciones.
+- `infocasas_1_dormitorio_errores.csv`: paginas o detalles que no pudieron descargarse.
 
 ## `notebooks/`
 

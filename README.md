@@ -76,15 +76,24 @@ Esa carpeta esta ignorada por Git.
 
 ## Estado actual
 
-- Descarga y guarda el HTML crudo del listado.
-- Extrae los links de las publicaciones del listado.
+- Descarga el HTML de los listados en memoria.
+- Detecta la paginacion disponible y recorre todas las paginas del listado.
+- Extrae y deduplica los links de publicaciones encontrados.
 - Descarga el detalle de cada publicacion.
+- Usa una pausa entre requests para reducir carga sobre el sitio objetivo.
 - Extrae campos principales de cada alquiler.
 - Genera un CSV listo para analisis.
 
 ## Como correr el scraping
 
 ```bash
+python src/main.py
+```
+
+Por defecto no se guarda HTML crudo para evitar archivos pesados. El scraper tiene reintentos ante timeouts y guarda las URLs fallidas en `data/processed/infocasas_1_dormitorio_errores.csv`. Si necesitas depurar el parser, podes activar cache raw de forma opcional:
+
+```powershell
+$env:CACHE_RAW_HTML = "1"
 python src/main.py
 ```
 
@@ -106,9 +115,9 @@ El notebook carga el CSV generado por el scraping, limpia los datos en memoria y
 
 ## Salidas generadas
 
-- `data/raw/infocasas_1_dormitorio.html`
 - `data/processed/infocasas_1_dormitorio_links.csv`
 - `data/processed/infocasas_1_dormitorio_detalle.csv`
+- `data/processed/infocasas_1_dormitorio_errores.csv`
 
 ## Analisis
 
