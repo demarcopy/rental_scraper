@@ -82,7 +82,7 @@ Esa carpeta esta ignorada por Git.
 - Descarga el detalle de cada publicacion.
 - Usa una pausa entre requests para reducir carga sobre el sitio objetivo.
 - Extrae campos principales de cada alquiler.
-- Genera un CSV listo para analisis.
+- Genera un CSV listo para analisis, con fecha de scraping por fila.
 
 ## Como correr el scraping
 
@@ -113,6 +113,8 @@ notebooks/analisis_alquileres.ipynb
 
 El notebook carga el CSV generado por el scraping, limpia los datos en memoria y muestra las tablas/graficos dentro del propio notebook. El outcome principal del analisis es el notebook; si hace falta compartir tablas puntuales, se pueden exportar CSVs desde una celda opcional.
 
+Para comparar publicaciones en pesos y dolares, el analisis convierte dolares a pesos con `TIPO_CAMBIO_USD_UYU = 40`. Ese valor esta definido al inicio del notebook y se puede ajustar para nuevas corridas.
+
 ## Salidas generadas
 
 - `data/processed/infocasas_1_dormitorio_links.csv`
@@ -122,3 +124,5 @@ El notebook carga el CSV generado por el scraping, limpia los datos en memoria y
 ## Analisis
 
 El analisis considera todos los tipos de propiedad disponibles. Para comparar segmentos se usa la columna `tipo_propiedad`.
+
+Tambien genera rankings para encontrar buenas oportunidades de alquiler usando costo mensual total, precio por metro cuadrado, gastos comunes y facilidades detectadas en titulo/descripcion. El ranking principal se enfoca en apartamentos de Montevideo y muestra el link directo a cada aviso.

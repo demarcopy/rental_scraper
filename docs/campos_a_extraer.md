@@ -10,6 +10,10 @@ Este CSV es el input del notebook de analisis.
 
 ## Campos del dataset
 
+### `fecha_scraping`
+
+Fecha en formato `YYYY-MM-DD` en la que se ejecuto el scraper y se genero la fila. Permite comparar corridas futuras sin perder trazabilidad temporal.
+
 ### `url`
 
 Link completo de la publicacion. Sirve para identificar el aviso y volver a consultarlo.
@@ -89,15 +93,51 @@ El notebook genera campos analiticos en memoria:
 
 ### `gastos_comunes_monto`
 
-Version numerica de `gastos_comunes`.
+Version numerica de `gastos_comunes`. En el analisis se interpreta en pesos; si el texto indica `U$S`, se convierte usando el tipo de cambio configurado.
+
+### `gastos_comunes_informados`
+
+Booleano que diferencia gastos realmente informados de campos vacios. Es importante porque gastos faltantes no equivalen necesariamente a gastos cero.
+
+### `alquiler_pesos`
+
+Precio del alquiler convertido a pesos. Las publicaciones en dolares se convierten con `TIPO_CAMBIO_USD_UYU = 40`.
+
+### `gastos_comunes_pesos`
+
+Gastos comunes expresados en pesos.
 
 ### `costo_mensual_total`
 
-Suma de `monto` y `gastos_comunes_monto`.
+Alias de compatibilidad para el costo mensual total en pesos.
+
+### `costo_mensual_total_pesos`
+
+Suma de `alquiler_pesos` y `gastos_comunes_pesos`.
+
+### `gastos_sobre_alquiler_pct`
+
+Relacion entre gastos comunes y alquiler. Ayuda a detectar gastos altos que encarecen una oferta aparentemente barata.
 
 ### `precio_m2`
 
 Relacion entre `monto` y `metros_cuadrados`, calculada solo cuando la superficie es valida.
+
+### `precio_m2_pesos`
+
+Relacion entre `alquiler_pesos` y `metros_cuadrados`.
+
+### `costo_total_m2_pesos`
+
+Relacion entre `costo_mensual_total_pesos` y `metros_cuadrados`.
+
+### Facilidades detectadas
+
+El notebook crea columnas booleanas desde `titulo` y `descripcion`: `tiene_garaje`, `acepta_mascotas`, `amoblado`, `a_estrenar`, `tiene_terraza`, `tiene_patio`, `tiene_parrillero`, `tiene_laundry`, `tiene_gimnasio`, `tiene_cowork`, `tiene_seguridad`, `tiene_aire_acondicionado` y `garantia_flexible`.
+
+### `score_oportunidad`
+
+Puntaje analitico para priorizar buenas ofertas. Combina descuento frente a comparables del mismo barrio/tipo/dormitorios, precio por metro cuadrado, facilidades, gastos altos y gastos no informados.
 
 ## Consideraciones de calidad
 

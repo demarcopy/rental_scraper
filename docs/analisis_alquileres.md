@@ -34,6 +34,10 @@ El notebook entrega una lectura ordenada de los alquileres obtenidos:
 - precios por barrio,
 - costo mensual total incluyendo gastos comunes,
 - precio por metro cuadrado cuando hay superficie valida,
+- conversion de precios a pesos con tipo de cambio fijo,
+- analisis de gastos comunes y su peso relativo sobre el alquiler,
+- deteccion de facilidades desde titulo y descripcion,
+- ranking de buenas oportunidades,
 - valores faltantes y posibles problemas de calidad.
 
 El analisis considera todos los tipos de propiedad disponibles. No esta limitado a apartamentos; `tipo_propiedad` se usa para segmentar la muestra.
@@ -51,8 +55,17 @@ Tambien se normalizan gastos comunes y se crean metricas derivadas:
 
 ```python
 df["gastos_comunes_monto"] = df["gastos_comunes"].apply(limpiar_monto_gastos)
-df["costo_mensual_total"] = df["monto"] + df["gastos_comunes_monto"]
+df["alquiler_pesos"] = df.apply(convertir_alquiler_a_pesos, axis=1)
+df["gastos_comunes_pesos"] = df["gastos_comunes_monto"]
+df["costo_mensual_total_pesos"] = df["alquiler_pesos"] + df["gastos_comunes_pesos"]
 df["precio_m2"] = df["monto"] / df["metros_cuadrados"]
+df["precio_m2_pesos"] = df["alquiler_pesos"] / df["metros_cuadrados"]
+```
+
+El tipo de cambio usado para convertir dolares a pesos queda declarado al inicio del notebook:
+
+```python
+TIPO_CAMBIO_USD_UYU = 40
 ```
 
 ## Moneda
@@ -65,7 +78,7 @@ Primero se revisa la distribucion:
 df["moneda"].value_counts(dropna=False)
 ```
 
-Luego las comparaciones se agrupan por `moneda` o se filtran segun el caso.
+Luego las comparaciones historicas se agrupan por `moneda`; para rankings de oportunidades se convierten a pesos con `TIPO_CAMBIO_USD_UYU = 40`.
 
 ## Tablas principales
 
@@ -76,7 +89,36 @@ El notebook calcula tablas como:
 - resumen de precio por tipo de propiedad,
 - resumen de precio por barrio,
 - costo mensual total por barrio,
-- precio por metro cuadrado por barrio.
+- precio por metro cuadrado por barrio,
+- gastos comunes por barrio,
+- avisos con gastos altos,
+- top de buenas oportunidades,
+- top de alquileres baratos por metro cuadrado,
+- top de avisos con mas facilidades.
+
+## Ranking de oportunidades
+
+El ranking `top_oportunidades` prioriza apartamentos en Montevideo que parecen atractivos frente a comparables del mismo `barrio` y `dormitorios`.
+
+El dataset no trae una columna de departamento/ciudad, por lo que Montevideo se filtra mediante una lista explicita de barrios normalizados dentro del notebook.
+
+El puntaje considera:
+
+- descuento del costo mensual total frente a la mediana del segmento,
+- descuento del precio por metro cuadrado frente a la mediana del segmento,
+- cantidad de facilidades detectadas,
+- penalizacion por gastos comunes no informados,
+- penalizacion por gastos comunes altos respecto al alquiler.
+
+La vista principal del ranking muestra una tabla legible con puesto, score, barrio, titulo, alquiler, gastos, total mensual, metros, total por metro cuadrado, descuentos frente a comparables, facilidades y link directo al aviso.
+
+Este ranking es una guia para inspeccion manual, no una decision automatica.
+
+## Facilidades
+
+El notebook busca palabras clave en `titulo` y `descripcion` para detectar senales como garaje, mascotas, amoblado, a estrenar, terraza, patio, parrillero, laundry, gimnasio, cowork, seguridad, aire acondicionado y garantias flexibles.
+
+Estas columnas ayudan a diferenciar ofertas baratas de ofertas realmente convenientes.
 
 ## Graficos
 

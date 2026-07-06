@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from datetime import date
 from pathlib import Path
 
 from config import BASE_URL, CACHE_RAW_HTML, REQUEST_DELAY_SECONDS
@@ -37,6 +38,7 @@ def guardar_resultados(ruta_archivo: Path, filas: list[dict[str, object]]) -> No
     ruta_archivo.parent.mkdir(parents=True, exist_ok=True)
 
     columnas = [
+        "fecha_scraping",
         "url",
         "titulo",
         "precio",
@@ -193,6 +195,7 @@ def main() -> None:
     print(f"Publicaciones encontradas: {len(links)}")
 
     filas: list[dict[str, object]] = []
+    fecha_scraping = date.today().isoformat()
     for index, url in enumerate(links, start=1):
         print(f"[{index}/{len(links)}] Descargando detalle: {url}")
         html = _descargar_detalle(url)
@@ -202,6 +205,7 @@ def main() -> None:
             continue
 
         fila = extraer_datos_publicacion(html, url)
+        fila["fecha_scraping"] = fecha_scraping
         filas.append(fila)
         print(f"  Titulo: {fila.get('titulo') or 'sin titulo'}")
 
