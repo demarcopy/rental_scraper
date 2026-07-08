@@ -1,0 +1,401 @@
+:root {
+  color-scheme: light;
+  --bg: #f4efe6;
+  --ink: #17211d;
+  --muted: #66716b;
+  --card: #fffaf0;
+  --line: #dfd2bd;
+  --accent: #315f48;
+  --accent-2: #d7773f;
+  --soft: #eadfcf;
+  --shadow: 0 18px 45px rgba(49, 40, 29, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(215, 119, 63, 0.20), transparent 28rem),
+    linear-gradient(135deg, #f8f0df 0%, var(--bg) 45%, #e8eee6 100%);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0 56px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent-2);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  max-width: 760px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.4rem, 8vw, 5.8rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.lead {
+  max-width: 760px;
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.55;
+}
+
+.hero-card,
+.filters,
+.weights-panel,
+.toolbar,
+.rental-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 240, 0.82);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.weights-panel {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 150px;
+  gap: 18px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 24px;
+}
+
+.weights-copy h2 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+  letter-spacing: -0.04em;
+}
+
+.weights-copy p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.weights-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.weight-control {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(110px, 1.4fr) 44px;
+  gap: 10px;
+  align-items: center;
+}
+
+.weight-control input {
+  margin: 0;
+}
+
+.weight-control strong {
+  color: var(--accent);
+  text-align: right;
+}
+
+.secondary-button {
+  background: #fffdf8;
+  color: var(--accent);
+}
+
+.hero-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 220px;
+  padding: 24px;
+  border-radius: 28px;
+}
+
+.metric-label,
+.hero-card small {
+  color: var(--muted);
+}
+
+.hero-card strong {
+  margin: 12px 0;
+  color: var(--accent);
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 220px minmax(220px, 1fr) minmax(260px, 1.6fr) auto;
+  gap: 18px;
+  align-items: end;
+  padding: 18px;
+  border-radius: 24px;
+}
+
+label,
+fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+select,
+input[type="range"],
+button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+select,
+button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 0 14px;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  color: #fffaf0;
+  font-weight: 800;
+}
+
+#price-label {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdf8;
+  padding: 7px 10px;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-radius: 20px;
+}
+
+.toolbar p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.toolbar label {
+  width: 220px;
+}
+
+.rentals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.rental-card {
+  display: flex;
+  min-height: 330px;
+  flex-direction: column;
+  border-radius: 26px;
+  padding: 20px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.rank {
+  color: var(--accent-2);
+  font-weight: 900;
+}
+
+.score {
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fffaf0;
+  padding: 7px 11px;
+  font-weight: 900;
+}
+
+.rental-card h2 {
+  margin: 16px 0 8px;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.neighborhood {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.stat {
+  border-radius: 16px;
+  background: var(--soft);
+  padding: 10px;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 1rem;
+}
+
+.amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: auto 0 16px;
+}
+
+.location-score {
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.base-score {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.amenities span {
+  border-radius: 999px;
+  background: #f5ead7;
+  padding: 6px 9px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.card-link {
+  color: var(--accent);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.empty {
+  border: 1px dashed var(--line);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+@media (max-width: 920px) {
+  .hero,
+  .filters,
+  .weights-panel,
+  .rentals {
+    grid-template-columns: 1fr;
+  }
+
+  .weights-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100% - 20px, 1180px);
+    padding-top: 24px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .weight-control {
+    grid-template-columns: 1fr 54px;
+  }
+
+  .weight-control input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .toolbar label {
+    width: 100%;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

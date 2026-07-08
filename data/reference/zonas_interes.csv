@@ -1,0 +1,11 @@
+nombre,tipo,latitud,longitud,peso,radio_km
+WTC,trabajo,-34.9020,-56.1367,10,3.0
+Tres Cruces,transporte,-34.8933,-56.1667,9,2.5
+Centro,servicios,-34.9067,-56.1990,7,2.5
+Rambla Pocitos,recreacion,-34.9115,-56.1506,6,2.0
+Facultad de Ingenieria,estudio,-34.9182,-56.1661,7,2.0
+Facultad de Derecho,estudio,-34.9052,-56.1764,6,2.0
+Parque Rodo,recreacion,-34.9111,-56.1654,5,1.8
+Shopping Punta Carretas,servicios,-34.9240,-56.1597,5,2.0
+Montevideo Shopping,servicios,-34.9030,-56.1360,6,2.0
+Terminal Colon,transporte,-34.8062,-56.2230,4,2.0

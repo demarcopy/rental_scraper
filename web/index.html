@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ranking de alquileres</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Rental Scraper</p>
+          <h1>Ranking de oportunidades</h1>
+          <p class="lead">Explora alquileres ordenados por el score del modelo: precio relativo, metros, gastos comunes y facilidades detectadas.</p>
+        </div>
+        <div class="hero-card">
+          <span class="metric-label">Avisos rankeados</span>
+          <strong id="total-count">-</strong>
+          <small id="updated-at">Cargando datos...</small>
+        </div>
+      </section>
+
+      <section class="filters" aria-label="Filtros">
+        <label>
+          Barrio
+          <select id="neighborhood-filter">
+            <option value="">Todos los barrios</option>
+          </select>
+        </label>
+
+        <label>
+          Precio mensual maximo
+          <input id="price-filter" type="range" min="0" max="0" step="500" value="0" />
+          <span id="price-label">Sin limite</span>
+        </label>
+
+        <fieldset>
+          <legend>Facilidades</legend>
+          <div id="amenities-filter" class="chips"></div>
+        </fieldset>
+
+        <button id="clear-filters" type="button">Limpiar filtros</button>
+      </section>
+
+      <section class="weights-panel" aria-label="Ponderacion del ranking">
+        <div class="weights-copy">
+          <p class="eyebrow">Modelo ajustable</p>
+          <h2>Ponderacion del score</h2>
+          <p>Cambia que pesa mas en el ranking. El orden se recalcula en esta pagina, sin modificar los datos originales.</p>
+        </div>
+        <div id="weights-controls" class="weights-controls"></div>
+        <button id="reset-weights" type="button" class="secondary-button">Restaurar pesos</button>
+      </section>
+
+      <section class="toolbar">
+        <p id="results-summary">Cargando ranking...</p>
+        <label>
+          Orden
+          <select id="sort-filter">
+            <option value="score">Mejor score</option>
+            <option value="price">Menor precio total</option>
+            <option value="amenities">Mas facilidades</option>
+          </select>
+        </label>
+      </section>
+
+      <section id="rentals" class="rentals" aria-live="polite"></section>
+      <p id="empty-state" class="empty" hidden>No hay alquileres para esos filtros.</p>
+    </main>
+
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

@@ -126,3 +126,47 @@ Para comparar publicaciones en pesos y dolares, el analisis convierte dolares a 
 El analisis considera todos los tipos de propiedad disponibles. Para comparar segmentos se usa la columna `tipo_propiedad`.
 
 Tambien genera rankings para encontrar buenas oportunidades de alquiler usando costo mensual total, precio por metro cuadrado, gastos comunes y facilidades detectadas en titulo/descripcion. El ranking principal se enfoca en apartamentos de Montevideo y muestra el link directo a cada aviso.
+
+## Como abrir la web del ranking
+
+La web local usa el CSV generado por el scraper en `data/processed/infocasas_1_dormitorio_detalle.csv` y calcula el score con el mismo criterio del notebook. Si existe el cache `data/reference/montevideo_barrios_coords.csv`, tambien suma un ajuste geografico acotado por cercania a referencias urbanas de Montevideo.
+
+```bash
+python src/web_server.py
+```
+
+Luego abrir:
+
+```text
+http://127.0.0.1:8000
+```
+
+La SPA permite filtrar por barrio, precio mensual maximo y facilidades detectadas en titulo/descripcion.
+
+La explicacion tecnica del ranking esta en:
+
+```text
+docs/ranking_alquileres.md
+```
+
+La configuracion de zonas geograficas esta en:
+
+```text
+docs/geografia_ranking.md
+```
+
+## Como actualizar ubicaciones
+
+Para geocodificar los barrios del CSV usando Nominatim/OpenStreetMap y guardar un cache local:
+
+```bash
+python src/location.py
+```
+
+El cache se guarda en:
+
+```text
+data/reference/montevideo_barrios_coords.csv
+```
+
+El ranking no llama a APIs externas al abrir la web; solo usa ese cache si ya existe.
