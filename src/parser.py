@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from html import unescape
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
@@ -106,8 +107,9 @@ def extraer_datos_publicacion(html: str, url: str) -> dict[str, Any]:
     barrio = _extraer_barrio(detalle, ficha_map)
     dormitorios = _extraer_campo_numerico(detalle, ficha_map, ["bedrooms", "dormitorios", "dormitorio"])
     banios = _extraer_campo_numerico(detalle, ficha_map, ["bathrooms", "baños", "banios", "banio"])
-    metros_cuadrados = _extraer_metros_cuadrados(detalle, ficha_map)
-    gastos_comunes = _extraer_gastos_comunes(detalle, ficha_map)
+    texto_publicacion = f"{titulo} {descripcion}"
+    metros_cuadrados = _extraer_metros_cuadrados(detalle, ficha_map, texto_publicacion)
+    gastos_comunes = _extraer_gastos_comunes(detalle, ficha_map, texto_publicacion)
     tipo_propiedad = _extraer_tipo_propiedad(detalle, ficha_map)
     referencia = _extraer_referencia(detalle, ficha_map, url)
 
@@ -171,8 +173,14 @@ def _limpiar_texto(valor: Any) -> str:
     if valor is None:
         return ""
     if isinstance(valor, str):
-        return " ".join(valor.split())
-    return " ".join(str(valor).split())
+        texto = valor
+    else:
+        texto = str(valor)
+
+    texto = unescape(texto)
+    texto = re.sub(r"<\s*br\s*/?>", " ", texto, flags=re.IGNORECASE)
+    texto = re.sub(r"<[^>]+>", " ", texto)
+    return " ".join(texto.split())
 
 
 def _extraer_precio(detalle: dict[str, Any]) -> tuple[str | None, str | None, int | None]:
@@ -231,7 +239,7 @@ def _extraer_campo_numerico(detalle: dict[str, Any], ficha_map: dict[str, str], 
     return None
 
 
-def _extraer_metros_cuadrados(detalle: dict[str, Any], ficha_map: dict[str, str]) -> str | None:
+def _extraer_metros_cuadrados(detalle: dict[str, Any], ficha_map: dict[str, str], texto_publicacion: str = "") -> str | None:
     candidatos = [
         detalle.get("m2Built"),
         detalle.get("m2"),
@@ -243,18 +251,22 @@ def _extraer_metros_cuadrados(detalle: dict[str, Any], ficha_map: dict[str, str]
     ]
     for candidato in candidatos:
         texto = _limpiar_texto(candidato)
-        if texto:
+        if texto and (_to_int(texto) or 0) > 0:
             return texto
 
     for key in ("m² edificados", "m² de terraza", "m² del terreno", "m2built", "m2", "surface"):
         valor = ficha_map.get(key)
-        if valor:
+        if valor and (_to_int(valor) or 0) > 0:
             return valor
+
+    metros_descripcion = _extraer_metros_desde_texto(texto_publicacion)
+    if metros_descripcion is not None:
+        return str(metros_descripcion)
 
     return None
 
 
-def _extraer_gastos_comunes(detalle: dict[str, Any], ficha_map: dict[str, str]) -> str | None:
+def _extraer_gastos_comunes(detalle: dict[str, Any], ficha_map: dict[str, str], texto_publicacion: str = "") -> str | None:
     valor = detalle.get("commonExpenses")
     if isinstance(valor, dict):
         amount = valor.get("amount")
@@ -263,18 +275,22 @@ def _extraer_gastos_comunes(detalle: dict[str, Any], ficha_map: dict[str, str]) 
         monto = _to_int(amount)
         if monto is not None and monto > 0:
             return f"{moneda} {formatear_numero(monto)}" if moneda else formatear_numero(monto)
-        return None
 
-    texto = _limpiar_texto(valor)
-    if texto:
-        return texto
+    if not isinstance(valor, dict):
+        texto = _limpiar_texto(valor)
+        if texto:
+            return texto
 
     valor = _limpiar_texto(detalle.get("commonExpenses_currency"))
     if valor:
         return valor
 
     texto = ficha_map.get("gastos comunes") or ficha_map.get("commonexpenses")
-    return texto or None
+    if texto:
+        return texto
+
+    gastos_descripcion = _extraer_gastos_desde_texto(texto_publicacion)
+    return gastos_descripcion or None
 
 
 def _extraer_tipo_propiedad(detalle: dict[str, Any], ficha_map: dict[str, str]) -> str | None:
@@ -314,10 +330,52 @@ def _extraer_referencia(detalle: dict[str, Any], ficha_map: dict[str, str], url:
 def _to_int(valor: Any) -> int | None:
     if valor is None:
         return None
+    texto = re.sub(r"[^0-9]", "", str(valor))
+    if not texto:
+        return None
     try:
-        return int(str(valor))
+        return int(texto)
     except ValueError:
         return None
+
+
+def _extraer_gastos_desde_texto(texto: str) -> str | None:
+    texto = _limpiar_texto(texto)
+    if not texto:
+        return None
+
+    match = re.search(
+        r"gastos?\s+comunes?(?:\s+(?:estimados?|aprox(?:imados?)?))?\s*[:\-]?\s*(U\$S|\$)?\s*([0-9][0-9\.]{2,})",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+
+    moneda = match.group(1) or "$"
+    monto = _to_int(match.group(2).replace(".", ""))
+    if monto is None or monto <= 0:
+        return None
+    return f"{moneda} {formatear_numero(monto)}"
+
+
+def _extraer_metros_desde_texto(texto: str) -> int | None:
+    texto = _limpiar_texto(texto)
+    if not texto:
+        return None
+
+    patrones = [
+        r"(?:area|superficie|m2|m²)[^0-9]{0,20}([0-9]{2,3})(?:[,.][0-9]+)?\s*(?:m2|m²)?",
+        r"([0-9]{2,3})(?:[,.][0-9]+)?\s*(?:m2|m²)",
+    ]
+    for patron in patrones:
+        match = re.search(patron, texto, flags=re.IGNORECASE)
+        if not match:
+            continue
+        metros = _to_int(match.group(1))
+        if metros is not None and 10 <= metros <= 300:
+            return metros
+    return None
 
 
 def formatear_numero(valor: int) -> str:

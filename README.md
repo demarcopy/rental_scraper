@@ -90,6 +90,12 @@ Esa carpeta esta ignorada por Git.
 python src/main.py
 ```
 
+Tambien se puede usar otro listado de InfoCasas y guardar la salida con otro prefijo:
+
+```bash
+python src/main.py --base-url "https://www.infocasas.com.uy/alquiler/inmuebles/2-dormitorios" --output-prefix infocasas_2_dormitorios
+```
+
 Por defecto no se guarda HTML crudo para evitar archivos pesados. El scraper tiene reintentos ante timeouts y guarda las URLs fallidas en `data/processed/infocasas_1_dormitorio_errores.csv`. Si necesitas depurar el parser, podes activar cache raw de forma opcional:
 
 ```powershell

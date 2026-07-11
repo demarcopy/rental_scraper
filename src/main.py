@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import argparse
 from datetime import date
 from pathlib import Path
 
@@ -39,6 +40,7 @@ def guardar_resultados(ruta_archivo: Path, filas: list[dict[str, object]]) -> No
 
     columnas = [
         "fecha_scraping",
+        "mes",
         "url",
         "titulo",
         "precio",
@@ -87,16 +89,16 @@ def _asegurar_html_listado(url: str, ruta_html: Path) -> str | None:
     return html
 
 
-def _ruta_html_listado(raiz_proyecto: Path, numero_pagina: int) -> Path:
+def _ruta_html_listado(raiz_proyecto: Path, numero_pagina: int, output_prefix: str) -> Path:
     """Devuelve la ruta local usada solo cuando CACHE_RAW_HTML esta activo."""
     if numero_pagina == 1:
-        return raiz_proyecto / "data" / "raw" / "infocasas_1_dormitorio.html"
+        return raiz_proyecto / "data" / "raw" / f"{output_prefix}.html"
     return (
         raiz_proyecto
         / "data"
         / "raw"
         / "listados"
-        / f"infocasas_1_dormitorio_pagina_{numero_pagina:03d}.html"
+        / f"{output_prefix}_pagina_{numero_pagina:03d}.html"
     )
 
 
@@ -108,14 +110,14 @@ def _extraer_numero_pagina_desde_url(url: str) -> int:
     return int(match.group(1)) if match else 1
 
 
-def _descubrir_paginas_listado(raiz_proyecto: Path) -> list[str]:
+def _descubrir_paginas_listado(raiz_proyecto: Path, base_url: str, output_prefix: str) -> list[str]:
     """Descubre todas las paginas disponibles desde el primer listado."""
-    ruta_html = _ruta_html_listado(raiz_proyecto, 1)
-    html = _asegurar_html_listado(BASE_URL, ruta_html)
+    ruta_html = _ruta_html_listado(raiz_proyecto, 1, output_prefix)
+    html = _asegurar_html_listado(base_url, ruta_html)
     if html is None:
-        raise RuntimeError(f"No se pudo descargar el primer listado: {BASE_URL}")
+        raise RuntimeError(f"No se pudo descargar el primer listado: {base_url}")
 
-    paginas = [BASE_URL, *extraer_links_paginas(html)]
+    paginas = [base_url, *extraer_links_paginas(html, base_url=base_url)]
 
     # Deduplicamos preservando orden: pagina 1 primero, luego paginas detectadas.
     vistas: set[str] = set()
@@ -129,9 +131,9 @@ def _descubrir_paginas_listado(raiz_proyecto: Path) -> list[str]:
     return salida
 
 
-def _extraer_links_todas_las_paginas(raiz_proyecto: Path) -> tuple[list[str], list[dict[str, str]]]:
+def _extraer_links_todas_las_paginas(raiz_proyecto: Path, base_url: str, output_prefix: str) -> tuple[list[str], list[dict[str, str]]]:
     """Recorre todos los listados disponibles y consolida links de publicaciones."""
-    paginas = _descubrir_paginas_listado(raiz_proyecto)
+    paginas = _descubrir_paginas_listado(raiz_proyecto, base_url, output_prefix)
     print(f"Paginas de listado detectadas: {len(paginas)}")
 
     links: list[str] = []
@@ -140,7 +142,7 @@ def _extraer_links_todas_las_paginas(raiz_proyecto: Path) -> tuple[list[str], li
 
     for index, url_pagina in enumerate(paginas, start=1):
         numero_pagina = _extraer_numero_pagina_desde_url(url_pagina)
-        ruta_html = _ruta_html_listado(raiz_proyecto, numero_pagina)
+        ruta_html = _ruta_html_listado(raiz_proyecto, numero_pagina, output_prefix)
         print(f"[{index}/{len(paginas)}] Procesando listado: {url_pagina}")
         html = _asegurar_html_listado(url_pagina, ruta_html)
         if html is None:
@@ -171,9 +173,9 @@ def _extraer_links_todas_las_paginas(raiz_proyecto: Path) -> tuple[list[str], li
     return links, errores
 
 
-def _asegurar_links(raiz_proyecto: Path, ruta_links: Path) -> tuple[list[str], list[dict[str, str]]]:
+def _asegurar_links(raiz_proyecto: Path, ruta_links: Path, base_url: str, output_prefix: str) -> tuple[list[str], list[dict[str, str]]]:
     """Extrae links recorriendo todas las paginas de listado detectadas."""
-    links, errores = _extraer_links_todas_las_paginas(raiz_proyecto)
+    links, errores = _extraer_links_todas_las_paginas(raiz_proyecto, base_url, output_prefix)
     guardar_links(ruta_links, links)
     print(f"Links guardados en: {ruta_links}")
     return links, errores
@@ -185,17 +187,30 @@ def _descargar_detalle(url: str) -> str | None:
     return html
 
 
-def main() -> None:
-    raiz_proyecto = Path(__file__).resolve().parents[1]
-    ruta_links = raiz_proyecto / "data" / "processed" / "infocasas_1_dormitorio_links.csv"
-    ruta_salida = raiz_proyecto / "data" / "processed" / "infocasas_1_dormitorio_detalle.csv"
-    ruta_errores = raiz_proyecto / "data" / "processed" / "infocasas_1_dormitorio_errores.csv"
+def _parsear_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Scrapea publicaciones de alquiler desde InfoCasas.")
+    parser.add_argument("--base-url", default=BASE_URL, help="URL del listado inicial a recorrer.")
+    parser.add_argument(
+        "--output-prefix",
+        default="infocasas_1_dormitorio",
+        help="Prefijo para CSVs generados en data/processed y HTML crudo opcional.",
+    )
+    return parser.parse_args()
 
-    links, errores = _asegurar_links(raiz_proyecto, ruta_links)
+
+def main() -> None:
+    args = _parsear_args()
+    raiz_proyecto = Path(__file__).resolve().parents[1]
+    ruta_links = raiz_proyecto / "data" / "processed" / f"{args.output_prefix}_links.csv"
+    ruta_salida = raiz_proyecto / "data" / "processed" / f"{args.output_prefix}_detalle.csv"
+    ruta_errores = raiz_proyecto / "data" / "processed" / f"{args.output_prefix}_errores.csv"
+
+    links, errores = _asegurar_links(raiz_proyecto, ruta_links, args.base_url, args.output_prefix)
     print(f"Publicaciones encontradas: {len(links)}")
 
     filas: list[dict[str, object]] = []
     fecha_scraping = date.today().isoformat()
+    mes_scraping = fecha_scraping[:7]
     for index, url in enumerate(links, start=1):
         print(f"[{index}/{len(links)}] Descargando detalle: {url}")
         html = _descargar_detalle(url)
@@ -206,6 +221,7 @@ def main() -> None:
 
         fila = extraer_datos_publicacion(html, url)
         fila["fecha_scraping"] = fecha_scraping
+        fila["mes"] = mes_scraping
         filas.append(fila)
         print(f"  Titulo: {fila.get('titulo') or 'sin titulo'}")
 

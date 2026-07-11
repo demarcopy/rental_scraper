@@ -16,6 +16,8 @@ data/processed/infocasas_1_dormitorio_detalle.csv
 
 Ese CSV es generado por el scraper y contiene titulo, URL, precio, moneda, barrio, dormitorios, banios, metros cuadrados, gastos comunes, tipo de propiedad y descripcion.
 
+Tambien puede incluir `fecha_scraping` y `mes`. El ranking conserva esos campos para que futuras vistas puedan filtrar o comparar publicaciones por corrida mensual.
+
 ## Limpieza inicial
 
 Antes de rankear se calculan columnas derivadas:

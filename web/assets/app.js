@@ -1,6 +1,7 @@
 const state = {
   rentals: [],
   filters: null,
+  selectedNeighborhoods: new Set(),
   selectedAmenities: new Set(),
   defaultWeights: {},
   weights: {},
@@ -13,6 +14,7 @@ const weightLabels = {
   ubicacion: "Ubicacion",
   zonas_interes: "Zonas de interes",
   zonas_evitar: "Zonas a evitar",
+  penalizacion_baja_calidad: "Penalizar datos incompletos",
   penalizacion_gastos_no_informados: "Penalizar gastos sin dato",
   penalizacion_gastos_altos: "Penalizar gastos altos",
 };
@@ -24,6 +26,7 @@ const weightRanges = {
   ubicacion: { min: 0, max: 3, step: 0.25 },
   zonas_interes: { min: 0, max: 3, step: 0.25 },
   zonas_evitar: { min: 0, max: 4, step: 0.25 },
+  penalizacion_baja_calidad: { min: 0, max: 40, step: 1 },
   penalizacion_gastos_no_informados: { min: 0, max: 25, step: 1 },
   penalizacion_gastos_altos: { min: 0, max: 30, step: 1 },
 };
@@ -32,6 +35,11 @@ const elements = {
   totalCount: document.querySelector("#total-count"),
   updatedAt: document.querySelector("#updated-at"),
   neighborhood: document.querySelector("#neighborhood-filter"),
+  neighborhoodToggle: document.querySelector("#neighborhood-toggle"),
+  neighborhoodMenu: document.querySelector("#neighborhood-menu"),
+  neighborhoodSearch: document.querySelector("#neighborhood-search"),
+  neighborhoodOptions: document.querySelector("#neighborhood-options"),
+  neighborhoodSelected: document.querySelector("#neighborhood-selected"),
   price: document.querySelector("#price-filter"),
   priceLabel: document.querySelector("#price-label"),
   amenities: document.querySelector("#amenities-filter"),
@@ -70,12 +78,7 @@ function setupFilters(data) {
   elements.totalCount.textContent = data.total ?? state.rentals.length;
   elements.updatedAt.textContent = data.updated_at ? `Scraping: ${data.updated_at}` : "Datos locales";
 
-  for (const barrio of state.filters.barrios || []) {
-    const option = document.createElement("option");
-    option.value = barrio;
-    option.textContent = barrio;
-    elements.neighborhood.append(option);
-  }
+  renderNeighborhoodOptions();
 
   const priceMax = Math.ceil((state.filters.precio_max || 0) / 500) * 500;
   elements.price.min = state.filters.precio_min || 0;
@@ -90,7 +93,12 @@ function setupFilters(data) {
     elements.amenities.append(label);
   }
 
-  elements.neighborhood.addEventListener("change", render);
+  elements.neighborhoodToggle.addEventListener("click", toggleNeighborhoodMenu);
+  elements.neighborhoodSearch.addEventListener("input", renderNeighborhoodOptions);
+  elements.neighborhoodOptions.addEventListener("change", handleNeighborhoodChange);
+  elements.neighborhoodSelected.addEventListener("click", handleNeighborhoodChipClick);
+  document.addEventListener("click", closeNeighborhoodMenuOnOutsideClick);
+  document.addEventListener("keydown", closeNeighborhoodMenuOnEscape);
   elements.price.addEventListener("input", () => {
     updatePriceLabel();
     render();
@@ -140,7 +148,10 @@ function updatePriceLabel() {
 }
 
 function clearFilters() {
-  elements.neighborhood.value = "";
+  state.selectedNeighborhoods.clear();
+  elements.neighborhoodSearch.value = "";
+  renderNeighborhoodOptions();
+  renderSelectedNeighborhoods();
   elements.price.value = elements.price.max;
   state.selectedAmenities.clear();
   for (const checkbox of elements.amenities.querySelectorAll("input")) checkbox.checked = false;
@@ -149,7 +160,7 @@ function clearFilters() {
 }
 
 function render() {
-  const selectedNeighborhood = elements.neighborhood.value;
+  const selectedNeighborhoods = [...state.selectedNeighborhoods];
   const maxPrice = Number(elements.price.value);
   const selectedAmenities = [...state.selectedAmenities];
 
@@ -157,7 +168,7 @@ function render() {
     ...rental,
     score_ajustado: calculateScore(rental),
   })).filter((rental) => {
-    const matchesNeighborhood = !selectedNeighborhood || rental.barrio === selectedNeighborhood;
+    const matchesNeighborhood = selectedNeighborhoods.length === 0 || selectedNeighborhoods.includes(rental.barrio);
     const matchesPrice = !maxPrice || Number(rental.costo_mensual_total_pesos || 0) <= maxPrice;
     const matchesAmenities = selectedAmenities.every((key) => rental.facilidades_keys.includes(key));
     return matchesNeighborhood && matchesPrice && matchesAmenities;
@@ -167,6 +178,72 @@ function render() {
   elements.summary.textContent = `${rentals.length} de ${state.rentals.length} alquileres visibles`;
   elements.empty.hidden = rentals.length > 0;
   elements.rentals.innerHTML = rentals.slice(0, 120).map(cardTemplate).join("");
+}
+
+function toggleNeighborhoodMenu() {
+  const shouldOpen = elements.neighborhoodMenu.hidden;
+  elements.neighborhoodMenu.hidden = !shouldOpen;
+  elements.neighborhoodToggle.setAttribute("aria-expanded", String(shouldOpen));
+  if (shouldOpen) elements.neighborhoodSearch.focus();
+}
+
+function closeNeighborhoodMenu() {
+  elements.neighborhoodMenu.hidden = true;
+  elements.neighborhoodToggle.setAttribute("aria-expanded", "false");
+}
+
+function closeNeighborhoodMenuOnOutsideClick(event) {
+  if (elements.neighborhood.contains(event.target)) return;
+  closeNeighborhoodMenu();
+}
+
+function closeNeighborhoodMenuOnEscape(event) {
+  if (event.key === "Escape") closeNeighborhoodMenu();
+}
+
+function renderNeighborhoodOptions() {
+  const query = normalizeText(elements.neighborhoodSearch?.value || "");
+  const neighborhoods = (state.filters?.barrios || []).filter((barrio) => normalizeText(barrio).includes(query));
+
+  elements.neighborhoodOptions.innerHTML = neighborhoods.length
+    ? neighborhoods.map((barrio) => `
+      <label class="multi-select-option">
+        <input type="checkbox" value="${escapeHtml(barrio)}" ${state.selectedNeighborhoods.has(barrio) ? "checked" : ""}>
+        <span>${escapeHtml(barrio)}</span>
+      </label>
+    `).join("")
+    : '<p class="multi-select-empty">Sin barrios encontrados</p>';
+
+  renderSelectedNeighborhoods();
+}
+
+function handleNeighborhoodChange(event) {
+  if (event.target.type !== "checkbox") return;
+  if (event.target.checked) state.selectedNeighborhoods.add(event.target.value);
+  else state.selectedNeighborhoods.delete(event.target.value);
+  renderSelectedNeighborhoods();
+  render();
+}
+
+function renderSelectedNeighborhoods() {
+  const selected = [...state.selectedNeighborhoods];
+  elements.neighborhoodToggle.textContent = selected.length === 0
+    ? "Todos los barrios"
+    : `${selected.length} barrio${selected.length === 1 ? "" : "s"} seleccionado${selected.length === 1 ? "" : "s"}`;
+
+  elements.neighborhoodSelected.innerHTML = selected.map((barrio) => `
+    <button class="selected-chip" type="button" data-neighborhood="${escapeHtml(barrio)}">
+      ${escapeHtml(barrio)} <span aria-hidden="true">×</span>
+    </button>
+  `).join("");
+}
+
+function handleNeighborhoodChipClick(event) {
+  const chip = event.target.closest("button[data-neighborhood]");
+  if (!chip) return;
+  state.selectedNeighborhoods.delete(chip.dataset.neighborhood);
+  renderNeighborhoodOptions();
+  render();
 }
 
 function sortRentals(rentals) {
@@ -189,6 +266,7 @@ function calculateScore(rental) {
     + Number(inputs.ubicacion || 0) * Number(state.weights.ubicacion || 0)
     + Number(inputs.zonas_interes || 0) * Number(state.weights.zonas_interes || 0)
     - Number(inputs.zonas_evitar || 0) * Number(state.weights.zonas_evitar || 0)
+    - Number(inputs.penalizacion_baja_calidad || 0) * Number(state.weights.penalizacion_baja_calidad || 0)
     - Number(inputs.penalizacion_gastos_no_informados || 0) * Number(state.weights.penalizacion_gastos_no_informados || 0)
     - Number(inputs.penalizacion_gastos_altos || 0) * Number(state.weights.penalizacion_gastos_altos || 0)
   );
@@ -258,4 +336,8 @@ function formatNumber(value) {
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
+}
+
+function normalizeText(value) {
+  return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }

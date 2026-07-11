@@ -25,6 +25,7 @@ PESOS_RANKING = {
     "ubicacion": 1,
     "zonas_interes": 1,
     "zonas_evitar": 1,
+    "penalizacion_baja_calidad": 20,
     "penalizacion_gastos_no_informados": 8,
     "penalizacion_gastos_altos": 10,
 }
@@ -145,6 +146,8 @@ def _preparar_datos(df: pd.DataFrame) -> pd.DataFrame:
 
     if "fecha_scraping" not in df.columns:
         df["fecha_scraping"] = pd.NA
+    if "mes" not in df.columns:
+        df["mes"] = df["fecha_scraping"].astype("string").str.slice(0, 7)
 
 
     df["gastos_comunes_informados"] = df.get("gastos_comunes", pd.Series(index=df.index)).apply(_gasto_informado)
@@ -156,7 +159,9 @@ def _preparar_datos(df: pd.DataFrame) -> pd.DataFrame:
     df["precio_m2_pesos"] = df["alquiler_pesos"] / df["metros_cuadrados"]
     df["costo_total_m2_pesos"] = df["costo_mensual_total_pesos"] / df["metros_cuadrados"]
 
-    texto = df.get("titulo", "").fillna("") + " " + df.get("descripcion", "").fillna("")
+    df["data_quality_score"] = _calcular_calidad_datos(df)
+
+    texto = df.get("titulo", pd.Series("", index=df.index)).fillna("") + " " + df.get("descripcion", pd.Series("", index=df.index)).fillna("")
     df["texto_busqueda"] = texto.apply(_normalizar_texto)
     for columna, (_, patron) in FACILIDADES.items():
         df[columna] = df["texto_busqueda"].str.contains(patron, regex=True, na=False)
@@ -166,6 +171,7 @@ def _preparar_datos(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _calcular_score(df: pd.DataFrame) -> pd.DataFrame:
+    df = _asegurar_columnas_score(df)
     df = df[
         df["moneda"].isin(["$", "U$S"])
         & (df["tipo_propiedad"].apply(_normalizar_texto) == "apartamento")
@@ -176,7 +182,7 @@ def _calcular_score(df: pd.DataFrame) -> pd.DataFrame:
     segmento = ["barrio", "dormitorios"]
     df["cantidad_comparables"] = df.groupby(segmento)["url"].transform("count")
     costo_mediano = df.groupby(segmento)["costo_mensual_total_pesos"].median().rename("costo_mediano_segmento")
-    precio_m2_mediano = df.dropna(subset=["precio_m2_pesos"]).groupby(segmento)["precio_m2_pesos"].median().rename("precio_m2_mediano_segmento")
+    precio_m2_mediano = df.dropna(subset=["costo_total_m2_pesos"]).groupby(segmento)["costo_total_m2_pesos"].median().rename("precio_m2_mediano_segmento")
     df = df.join(costo_mediano, on=segmento)
     df = df.join(precio_m2_mediano, on=segmento)
 
@@ -184,12 +190,13 @@ def _calcular_score(df: pd.DataFrame) -> pd.DataFrame:
         df["costo_mediano_segmento"] - df["costo_mensual_total_pesos"]
     ) / df["costo_mediano_segmento"], errors="coerce")
     df["descuento_m2_vs_segmento_pct"] = pd.to_numeric((
-        df["precio_m2_mediano_segmento"] - df["precio_m2_pesos"]
+        df["precio_m2_mediano_segmento"] - df["costo_total_m2_pesos"]
     ) / df["precio_m2_mediano_segmento"], errors="coerce")
     df["gastos_sobre_alquiler_pct"] = pd.to_numeric(df["gastos_sobre_alquiler_pct"], errors="coerce")
     df["descuento_total_clip"] = df["descuento_vs_segmento_pct"].fillna(0).clip(-0.5, 0.5)
     df["descuento_m2_clip"] = df["descuento_m2_vs_segmento_pct"].fillna(0).clip(-0.5, 0.5)
     df["facilidades_clip"] = df["cantidad_facilidades"].clip(upper=8)
+    df["penalizacion_baja_calidad"] = (1 - df["data_quality_score"].fillna(0).clip(0, 100) / 100).clip(0, 1)
     df["penalizacion_gastos_no_informados"] = (~df["gastos_comunes_informados"]).astype(int)
     df["penalizacion_gastos_altos"] = (df["gastos_sobre_alquiler_pct"].fillna(0) > 0.25).astype(int)
 
@@ -200,6 +207,7 @@ def _calcular_score(df: pd.DataFrame) -> pd.DataFrame:
         + df["score_ubicacion"].fillna(0) * PESOS_RANKING["ubicacion"]
         + df["score_zonas_interes"].fillna(0) * PESOS_RANKING["zonas_interes"]
         - df["penalizacion_zona_evitar"].fillna(0) * PESOS_RANKING["zonas_evitar"]
+        - df["penalizacion_baja_calidad"] * PESOS_RANKING["penalizacion_baja_calidad"]
         - df["penalizacion_gastos_no_informados"] * PESOS_RANKING["penalizacion_gastos_no_informados"]
         - df["penalizacion_gastos_altos"] * PESOS_RANKING["penalizacion_gastos_altos"]
     )
@@ -214,6 +222,8 @@ def _fila_a_dict(row: pd.Series) -> dict[str, Any]:
         "score": round(float(row["score_oportunidad"]), 1),
         "score_base": round(float(row["score_oportunidad"]), 1),
         "url": _valor(row.get("url")),
+        "fecha_scraping": _valor(row.get("fecha_scraping")),
+        "mes": _valor(row.get("mes")),
         "titulo": _valor(row.get("titulo")),
         "barrio": _valor(row.get("barrio")),
         "tipo_propiedad": _valor(row.get("tipo_propiedad")),
@@ -241,6 +251,7 @@ def _fila_a_dict(row: pd.Series) -> dict[str, Any]:
         "descuento_vs_segmento_pct": _valor(row.get("descuento_vs_segmento_pct")),
         "descuento_m2_vs_segmento_pct": _valor(row.get("descuento_m2_vs_segmento_pct")),
         "cantidad_facilidades": int(row.get("cantidad_facilidades", 0)),
+        "data_quality_score": _valor(row.get("data_quality_score")),
         "facilidades": facilidades,
         "facilidades_keys": [key for key in FACILIDADES if bool(row.get(key, False))],
         "gastos_comunes_informados": bool(row.get("gastos_comunes_informados", False)),
@@ -251,6 +262,7 @@ def _fila_a_dict(row: pd.Series) -> dict[str, Any]:
             "ubicacion": _valor(row.get("score_ubicacion")),
             "zonas_interes": _valor(row.get("score_zonas_interes")),
             "zonas_evitar": _valor(row.get("penalizacion_zona_evitar")),
+            "penalizacion_baja_calidad": _valor(row.get("penalizacion_baja_calidad")),
             "penalizacion_gastos_no_informados": _valor(row.get("penalizacion_gastos_no_informados")),
             "penalizacion_gastos_altos": _valor(row.get("penalizacion_gastos_altos")),
         },
@@ -278,6 +290,30 @@ def _convertir_alquiler_a_pesos(row: pd.Series) -> float | pd.NA:
     if row.get("moneda") == "$":
         return row.get("monto")
     return pd.NA
+
+
+def _calcular_calidad_datos(df: pd.DataFrame) -> pd.Series:
+    score = pd.Series(100.0, index=df.index)
+    score -= df["alquiler_pesos"].isna().astype(float) * 35
+    score -= df.get("barrio", pd.Series(index=df.index)).isna().astype(float) * 20
+    score -= df["metros_cuadrados"].isna().astype(float) * 25
+    score -= (~df["gastos_comunes_informados"]).astype(float) * 15
+    score -= df.get("tipo_propiedad", pd.Series(index=df.index)).isna().astype(float) * 10
+    return score.clip(lower=0, upper=100)
+
+
+def _asegurar_columnas_score(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    defaults: dict[str, Any] = {
+        "score_ubicacion": 0.0,
+        "score_zonas_interes": 0.0,
+        "penalizacion_zona_evitar": 0.0,
+        "data_quality_score": 100.0,
+    }
+    for columna, valor in defaults.items():
+        if columna not in df.columns:
+            df[columna] = valor
+    return df
 
 
 def _normalizar_texto(valor: Any) -> str:

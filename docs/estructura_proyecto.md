@@ -9,9 +9,11 @@ Scrapper-alquileres/
 |-- docs/
 |-- notebooks/
 |-- src/
+|-- web/
 |-- data/
 |   |-- raw/
-|   `-- processed/
+|   |-- processed/
+|   `-- reference/
 |-- requirements.txt
 |-- README.md
 `-- .gitignore
@@ -44,6 +46,22 @@ Archivos principales:
 - `infocasas_1_dormitorio_detalle.csv`: dataset consolidado de publicaciones.
 - `infocasas_1_dormitorio_errores.csv`: paginas o detalles que no pudieron descargarse.
 
+La web y el ranking leen principalmente `infocasas_1_dormitorio_detalle.csv`.
+
+## `data/reference/`
+
+Guarda configuracion geografica editable por el usuario.
+
+Archivos principales:
+
+- `zonas_interes.csv`: puntos que suman al score geografico.
+- `zonas_evitar.csv`: puntos con radio que penalizan el score geografico.
+- `zonas_evitar.geojson`: poligonos que penalizan el score geografico.
+
+## `web/`
+
+Contiene la SPA estatica para explorar el ranking local desde `src/web_server.py`.
+
 ## `notebooks/`
 
 Contiene el notebook principal de analisis:
@@ -74,6 +92,7 @@ El repositorio ignora archivos generados o locales:
 - checkpoints de Jupyter,
 - HTML crudo,
 - cache local de Matplotlib,
+- salidas derivadas de `data/processed/analysis/`,
 - graficos generados opcionalmente.
 
 Esto mantiene el repositorio enfocado en codigo, documentacion y resultados relevantes.

@@ -94,6 +94,8 @@ La salida final del scraping se guarda en:
 data/processed/infocasas_1_dormitorio_detalle.csv
 ```
 
+Cada fila incluye `fecha_scraping` y `mes` para poder comparar o acumular corridas futuras.
+
 Este archivo es el input del notebook.
 
 ## 9. Analisis en notebook

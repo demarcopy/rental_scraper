@@ -24,9 +24,16 @@
       <section class="filters" aria-label="Filtros">
         <label>
           Barrio
-          <select id="neighborhood-filter">
-            <option value="">Todos los barrios</option>
-          </select>
+          <div class="multi-select" id="neighborhood-filter">
+            <button id="neighborhood-toggle" class="multi-select-toggle" type="button" aria-expanded="false" aria-controls="neighborhood-menu">
+              Todos los barrios
+            </button>
+            <div id="neighborhood-menu" class="multi-select-menu" hidden>
+              <input id="neighborhood-search" class="multi-select-search" type="search" placeholder="Buscar barrio" autocomplete="off" />
+              <div id="neighborhood-options" class="multi-select-options"></div>
+            </div>
+          </div>
+          <div id="neighborhood-selected" class="selected-chips" aria-live="polite"></div>
         </label>
 
         <label>

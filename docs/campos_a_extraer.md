@@ -14,6 +14,10 @@ Este CSV es el input del notebook de analisis.
 
 Fecha en formato `YYYY-MM-DD` en la que se ejecuto el scraper y se genero la fila. Permite comparar corridas futuras sin perder trazabilidad temporal.
 
+### `mes`
+
+Mes de la corrida en formato `YYYY-MM`, derivado de `fecha_scraping`. Sirve para agrupar publicaciones cuando se acumulen resultados de distintos scrapings.
+
 ### `url`
 
 Link completo de la publicacion. Sirve para identificar el aviso y volver a consultarlo.
